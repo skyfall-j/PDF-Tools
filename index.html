@@ -186,6 +186,15 @@
             margin: 20px 0;
             display: none;
         }
+        
+        .qr-text {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-family: monospace;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -215,7 +224,11 @@
         <div class="result" id="result">
             <h3>✅ 二维码生成成功！</h3>
             <div class="qr-code">
-                <img id="qrImage" src="" alt="二维码">
+                <div id="qrcode"></div>
+            </div>
+            <div class="qr-text">
+                <strong>链接地址：</strong><br>
+                <span id="qrLink"></span>
             </div>
             <div class="download-links">
                 <a href="#" id="downloadQR" download>下载二维码</a>
@@ -224,7 +237,7 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script>
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
@@ -233,7 +246,8 @@
         const error = document.getElementById('error');
         const success = document.getElementById('success');
         const result = document.getElementById('result');
-        const qrImage = document.getElementById('qrImage');
+        const qrcodeDiv = document.getElementById('qrcode');
+        const qrLink = document.getElementById('qrLink');
         const downloadQR = document.getElementById('downloadQR');
         const viewOnline = document.getElementById('viewOnline');
         
@@ -299,14 +313,16 @@
             
             try {
                 // 模拟处理过程
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                // 生成二维码
+                // 生成二维码链接
                 const qrData = `https://skyfall-j.github.io/PDF-Tools/${selectedFile.name.replace('.pdf', '_轻量查看器.html')}`;
                 
+                // 清空之前的二维码
+                qrcodeDiv.innerHTML = '';
+                
                 // 创建二维码
-                const canvas = document.createElement('canvas');
-                QRCode.toCanvas(canvas, qrData, {
+                QRCode.toCanvas(qrcodeDiv, qrData, {
                     width: 200,
                     margin: 2,
                     color: {
@@ -316,14 +332,18 @@
                 }, (err) => {
                     if (err) {
                         showError('二维码生成失败：' + err.message);
+                        hideLoading();
                         return;
                     }
                     
                     // 显示结果
-                    qrImage.src = canvas.toDataURL();
-                    downloadQR.href = canvas.toDataURL();
-                    downloadQR.download = `${selectedFile.name.replace('.pdf', '_二维码.png')}`;
+                    const canvas = qrcodeDiv.querySelector('canvas');
+                    if (canvas) {
+                        downloadQR.href = canvas.toDataURL();
+                        downloadQR.download = `${selectedFile.name.replace('.pdf', '_二维码.png')}`;
+                    }
                     viewOnline.href = qrData;
+                    qrLink.textContent = qrData;
                     
                     showSuccess('二维码生成成功！');
                     result.style.display = 'block';
